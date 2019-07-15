@@ -16,7 +16,7 @@
 
 **7**. Check that neccessary software is installed with:
 
-  ``` 
+  ```
   sudo apt-get install python-smbus python3-smbus python-dev python3-dev i2c-tools
   ```
 
@@ -59,14 +59,12 @@ sudo adduser pi i2c
 
 Open the config.txt file:
 ```
-
 sudo nano /boot/config.txt
 ```
 
 and add the following text to the bottom:
 
 ```
-
 dtparam=i2c_baudrate=1000000
 ```
 
@@ -76,14 +74,12 @@ dtparam=i2c_baudrate=1000000
 Open the config file:
 
 ``` 
-
 sudo nano /boot/config.txt
 ```
 and add:
 
 ``` 
 core_freq = 250
-
 ```
 to the bottom of the file. We fixed the VPU's core frequency to the default frequency to avoid any issues with overclocking.
 
