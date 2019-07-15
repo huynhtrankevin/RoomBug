@@ -2,13 +2,19 @@
 
 ## Configuring Raspberry Pi 3 B+ running Raspbian Stretch OS for I2C 
 
-1. ``` sudo raspi-config ```
-2. Select option 5 Interfacing Options
-3. Select P5 I2C
-4. Enable I2C
-5. ```sudo reboot```
-6. ``` sudo apt-get update && upgrade ```
-7. Check that neccessary software is installed with:
+**1**. ``` sudo raspi-config ```
+
+**2**. Select option 5 Interfacing Options
+
+**3**. Select P5 I2C
+
+**4**. Enable I2C
+
+**5**. ```sudo reboot```
+
+**6**. ``` sudo apt-get update && upgrade ```
+
+**7**. Check that neccessary software is installed with:
 
   ``` 
   sudo apt-get install python-smbus python3-smbus python-dev python3-dev i2c-tools
@@ -28,7 +34,7 @@ And your OS release by:
 cat /etc/os-release
 ```
 
-8. If you were running 3.18 or later, we'll need to enable i2c in the config file.
+**8**. If you were running 3.18 or later, we'll need to enable i2c in the config file.
 
 Open the config file with:
 
@@ -41,7 +47,7 @@ and add the following text to the bottom of the file:
 ```
 dtparam=i2c1=on
 ```
-9. Make sure that 'pi' user is added to the i2c group so that we could use I2C tools owithout being in root
+**9**. Make sure that 'pi' user is added to the i2c group so that we could use I2C tools owithout being in root
 
 ```
 sudo adduser pi i2c
@@ -49,7 +55,7 @@ sudo adduser pi i2c
 
 ## Setting the I2C Bus speed
 
-1. We can configure the I2C bus speed to be 100 kbit/s (standard mode), 400 kbits/s (full speed), 1 Mbit/s (fast mode), and 3.2 Mbit/s (high speed). We'll configure our bus speed to be 1 MHz.
+**1**. We can configure the I2C bus speed to be 100 kbit/s (standard mode), 400 kbits/s (full speed), 1 Mbit/s (fast mode), and 3.2 Mbit/s (high speed). We'll configure our bus speed to be 1 MHz.
 
 Open the config.txt file:
 ```
@@ -65,7 +71,7 @@ dtparam=i2c_baudrate=1000000
 ```
 
 
-2. For Pi's 3B, 3B+ and Zero W, the clock for the I2C controller is linked to the VPU core which means that the clock frequency may vary depending on the VPU load. To solve this, we'll fix the VPU core frequency to a constant frequency.
+**2**. For Pi's 3B, 3B+ and Zero W, the clock for the I2C controller is linked to the VPU core which means that the clock frequency may vary depending on the VPU load. To solve this, we'll fix the VPU core frequency to a constant frequency.
 
 Open the config file:
 
@@ -81,7 +87,8 @@ core_freq = 250
 ```
 to the bottom of the file. We fixed the VPU's core frequency to the default frequency to avoid any issues with overclocking.
 
-Sources: 
+**Sources**:
+
 https://www.abelectronics.co.uk/kb/article/1089/i2c--smbus-and-raspbian-stretch-linux
 
 https://www.raspberrypi.org/documentation/configuration/config-txt/overclocking.md
