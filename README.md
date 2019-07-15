@@ -109,7 +109,7 @@ ADD IMAGES AND DIRECTIONS
 
 ### Testing
 
-**1**. To test if everything worked, run the mpu6050test.py program:
+**1**. To test if everything worked, run the *mpu6050test.py* program:
 
 ```
 python mpu6050test.py
