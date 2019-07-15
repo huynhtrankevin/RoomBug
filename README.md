@@ -1,6 +1,20 @@
 # RoomBug
 
-## Configuring Raspberry Pi 3 B+ running Raspbian Stretch OS for I2C 
+## Description
+
+RoomBug is an affordable mobile vacuuming robot inspired by the commercial Roomba robots and is capable of autonomous navigation throughout user specified regions of the environment. 
+
+The system runs on a Raspberry Pi 3 B+ and is actuated by low-cost hobby DC motors. It navigates by using a light weight SLAM algorithm on sensor measurements from a PiCamera module, LIDAR sensor, and MPU6050 IMU sensor to perform position estimation.
+
+
+## Table of Contents
+
+1. Setting up the MPU6050 
+2. Setting up the motor driver 
+
+## Setting up the MPU6050
+
+### Configuring Raspberry Pi 3 B+ running Raspbian Stretch OS for I2C 
 
 **1**. ``` sudo raspi-config ```
 
@@ -53,7 +67,7 @@ dtparam=i2c1=on
 sudo adduser pi i2c
 ```
 
-## Setting the I2C Bus speed
+### Setting the I2C Bus speed
 
 **1**. We can configure the I2C bus speed to be 100 kbit/s (standard mode), 400 kbits/s (full speed), 1 Mbit/s (fast mode), and 3.2 Mbit/s (high speed). We'll configure our bus speed to be 1 MHz.
 
@@ -82,6 +96,26 @@ and add:
 core_freq = 250
 ```
 to the bottom of the file. We fixed the VPU's core frequency to the default frequency to avoid any issues with overclocking.
+
+**3**. Now reboot the pi for the configurations to take effect:
+
+```
+sudo reboot now
+```
+
+### Wiring it up
+
+ADD IMAGES AND DIRECTIONS
+
+### Testing
+
+**1**. To test if everything worked, run the mpu6050test.py program:
+
+```
+python mpu6050test.py
+```
+
+You should see something like:
 
 **Sources**:
 
