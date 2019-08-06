@@ -11,6 +11,10 @@ RoomBug is a test platform for mobile robotics built on top of the iRobot Roomba
 3. map to light show
 4. sense collision and play audio
 
+### AutoDockr
+1. locate QR code on charging station
+2. develop PID control to move toward charging station
+
 ### SLAM pt 1
 1. interface Pi with ROS
 2. interface Pi with LIDAR
