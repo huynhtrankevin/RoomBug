@@ -2,9 +2,22 @@
 
 ## Description
 
-RoomBug is an affordable mobile vacuuming robot inspired by the commercial Roomba robots and is capable of autonomous navigation throughout user specified regions of the environment. 
+RoomBug is a test platform for mobile robotics built on top of the iRobot Roomba 550 and ROS.
+## To-Do
 
-The system runs on a Raspberry Pi 3 B+ and is actuated by low-cost hobby DC motors. It navigates by using a light weight SLAM algorithm on sensor measurements from a PiCamera module, LIDAR sensor, and MPU6050 IMU sensor to perform position estimation.
+### Blink Eff-FT (FFT)
+1. write Roomba library for basic control via Pi
+2. write/find FFT software
+3. map to light show
+4. sense collision and play audio
+
+### AutoDockr
+1. locate QR code on charging station
+2. develop PID control to move toward charging station
+
+### SLAM pt 1
+1. interface Pi with ROS
+2. interface Pi with LIDAR
 
 
 ## Table of Contents
