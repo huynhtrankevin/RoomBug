@@ -93,19 +93,4 @@ def read_bumps():
     s.write(cmd)
     
     bytes_read = s.read(1)
-
-    
-    if bytes_read[0] & bytes([(1 << IDX_LWHEELDROP)])[0]:
-       print('Left Wheel Drop')
-       
-    if bytes_read[0] & bytes([(1 << IDX_RWHEELDROP)])[0]:
-       print('Right Wheel Drop')
-       
-    if bytes_read[0] & bytes([(1 << IDX_LBUMP)])[0]:
-       print('Left Bump')
-       
-    if bytes_read[0] & bytes([(1 << IDX_RBUMP)])[0]:
-       print('Right Bump')
-    
-    print('_______________________________________')
-    
+    return bytes_read

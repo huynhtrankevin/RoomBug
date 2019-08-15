@@ -1,13 +1,13 @@
 import roomba
 import time
 
-roomba.write_start()
-roomba.write_mode(mode=roomba.OPCODE_FULL)
-#roomba.write_shutdown()
+#roomba.write_start()
+#roomba.write_mode(mode=roomba.OPCODE_FULL)
+roomba.write_shutdown()
 
 _TEST_LED = False
 _TEST_MOTORS = False
-_TEST_SENSORS = True
+_TEST_SENSORS = False
 
 def test_LEDs():
     print('LED test')
