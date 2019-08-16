@@ -2,8 +2,6 @@ import serial
 import time
 import pigpio
 
-s = serial.Serial(port='/dev/serial0', baudrate=9600)
-
 TX = 19
 RX = 26
 
@@ -54,5 +52,3 @@ def pause():
  
 def resume():
     write_command(CMD_RESUME,0x00,0x00)
-
-play(1,2)
