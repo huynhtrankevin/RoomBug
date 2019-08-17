@@ -1,9 +1,15 @@
 import serial
 import time
 import pigpio
+import RPi.GPIO as GPIO
 
 TX = 19
 RX = 26
+
+BusyPin = int(3)
+
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(BusyPin, GPIO.IN)
 
 pi = pigpio.pi()
 pi.set_mode(TX,pigpio.OUTPUT)
@@ -52,3 +58,6 @@ def pause():
  
 def resume():
     write_command(CMD_RESUME,0x00,0x00)
+    
+def isPlaying():
+    return GPIO.input(BusyPin)

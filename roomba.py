@@ -2,8 +2,6 @@ import serial
 import time
 
 
-s = serial.Serial(port = '/dev/serial0',baudrate = 115200)
-
 # start command which must be sent before any other command
 OPCODE_START = 128
 
@@ -21,12 +19,36 @@ OPCODE_LEDS = 139
 OPCODE_DRIVE = 137
 OPCODE_DRIVE_DIRECT = 145
 
+#buttons
+OPCODE_BUTTON_PRESS = 165
+CLEAN_BUTTON = 0
+SPOT_BUTTON = 1
+DOCK_BUTTON = 2
+MINUTE_BUTTON = 3
+HOUR_BUTTON = 4
+DAY_BUTTON = 5
+SCHEDULE_BUTTON = 6
+CLOCK_BUTTON = 7
+
+# roomba button behaviors
+OPCODE_CLEAN = 135
+
 # sensor opcode and packet ID
 OPCODE_SENSORS = 142
 PKTID_BUMPS_WHEELDROPS = 7
 PKTID_WALL = 8
+PKTID_BUTTONS = 18
+
+TURN_INPLACE_CW = 0xFFFF
+TURN_INPLACE_CCW = 0x0001
+DRIVE_STRAIGHT = 0x8000
 
 
+
+IDX_LWHEELDROP = 3
+IDX_RWHEELDROP = 2
+IDX_LBUMP = 1
+IDX_RBUMP = 0
 
 #util functions
 def get_lower(val):
@@ -46,51 +68,73 @@ def constrain(val, lower_bound, upper_bound):
         res = upper_bound
     
     return res
-def write_start():
-    s.write([OPCODE_START])
 
-def write_mode(mode):
-    if(mode == OPCODE_FULL):
-        s.write([OPCODE_FULL])
-    else:
-        s.write([OPCODE_SAFE])
+
+
+class Roomba:
+    def __init__(self):
+        self.serial = serial.Serial(port = '/dev/serial0',baudrate = 115200)
+        self.leftBumpDetected = False
+        self.rightBumpDetected = False
+        self.wallDetected = False
+        self.powerButtonPressed = False
     
-def write_LED(LED_bits, power_color, power_intensity):
-    msg = [OPCODE_LEDS, LED_bits, power_color, power_intensity]
-    s.write(msg)
+    def write_start(self):
+        self.serial.write([OPCODE_START])
     
-def write_shutdown():
-    s.write([OPCODE_POWER])
-
-TURN_INPLACE_CW = 0xFFFF
-TURN_INPLACE_CCW = 0x0001
-DRIVE_STRAIGHT = 0x8000
-
-def write_drive(velocity, radius):
-    vel = constrain(velocity,-500, 500)
-    if radius != TURN_INPLACE_CW & radius != TURN_INPLACE_CCW & radius != DRIVE_STRAIGHT:
-        r = constrain(radius,-2000, 2000)
-    else:
-        r = radius
-
-    cmd = [OPCODE_DRIVE, get_upper(velocity), get_lower(velocity), get_upper(radius), get_lower(radius)]
-    s.write(cmd)
+    def write_mode(self,mode):
+        if(mode == OPCODE_FULL):
+            self.serial.write([OPCODE_FULL])
+        else:
+            self.serial.write([OPCODE_SAFE])
     
-
-def write_drive_direct(left_velocity, right_velocity):
-    lvel = constrain(left_velocity, -500, 500)
-    rvel = constrain(right_velocity, -500, 500)
-    cmd = [OPCODE_DRIVE_DIRECT, get_upper(rvel), get_lower(rvel), get_upper(lvel), get_lower(lvel)]
-    s.write(cmd)
-
-IDX_LWHEELDROP = 3
-IDX_RWHEELDROP = 2
-IDX_LBUMP = 1
-IDX_RBUMP = 0
-
-def read_bumps():
-    cmd = [OPCODE_SENSORS, PKTID_BUMPS_WHEELDROPS]
-    s.write(cmd)
+    def write_LED(self,LED_bits, power_color, power_intensity):
+        msg = [OPCODE_LEDS, LED_bits, power_color, power_intensity]
+        self.serial.write(msg)
     
-    bytes_read = s.read(1)
-    return bytes_read
+    def write_shutdown(self):
+        self.serial.write([OPCODE_POWER])
+    
+    def write_clean(self):
+        self.serial.write([OPCODE_CLEAN])
+        
+    def write_drive(self,velocity, radius):
+        vel = constrain(velocity,-500, 500)
+        if radius != TURN_INPLACE_CW & radius != TURN_INPLACE_CCW & radius != DRIVE_STRAIGHT:
+            r = constrain(radius,-2000, 2000)
+        else:
+            r = radius
+
+        cmd = [OPCODE_DRIVE, get_upper(vel), get_lower(vel), get_upper(r), get_lower(r)]
+        self.serial.write(cmd)
+    
+    def write_drive_direct(self,left_velocity, right_velocity):
+        lvel = constrain(left_velocity, -500, 500)
+        rvel = constrain(right_velocity, -500, 500)
+        cmd = [OPCODE_DRIVE_DIRECT, get_upper(rvel), get_lower(rvel), get_upper(lvel), get_lower(lvel)]
+        self.serial.write(cmd)
+
+    def read_bumps(self):
+        cmd = [OPCODE_SENSORS, PKTID_BUMPS_WHEELDROPS]
+        self.serial.write(cmd)
+
+        bytes_read = self.serial.read(1)
+        return bytes_read
+    
+    def read_buttons(self):
+        cmd = [OPCODE_SENSORS, PKTID_BUTTONS]
+        self.serial.write(cmd)
+        
+        bytes_read = self.serial.read(1)
+        
+        self.powerButtonPressed = bool(bytes_read[0] & bytes([(1 << CLEAN_BUTTON)])[0])
+        
+        if self.powerButtonPressed == True:
+            # lazy hack... remove later
+            print('Power Button Pressed')
+            self.write_shutdown()    
+        
+        
+        return bytes_read
+
+

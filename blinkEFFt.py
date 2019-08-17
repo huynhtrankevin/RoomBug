@@ -1,4 +1,4 @@
-import roomba
+import roomba as r
 import sched
 import time
 import threading
@@ -9,11 +9,7 @@ requestInterval = 0.03
 
 
 threadLock = threading.Lock()
-bytes_read = bytes([0])
-class SensorData:
-    def __init__(self):
-        self.bytes_read = bytes([0])
-        
+# thread class    
 class myThread(threading.Thread):
     def __init__(self, threadID,name, func, args):
         threading.Thread.__init__(self)
@@ -24,53 +20,125 @@ class myThread(threading.Thread):
     def run(self):
         self.func(self.args)
 
-
-
-def runRequestSensorData(sDat):
+# class to implement state machine
+class StateMachine:
+    def __init__(self, roomba):
+        self.passive_state = 0
+        self.pissed_state_1 = 1
+        self.pissed_state_2 = 2
+        self.current_state = self.passive_state
+        self.bumpCount = 0
+        self.roomba = roomba
+        self.timeThresh = 3 # in time units returned by time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
+        self.timeSinceLastBump = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
+    
+    def updateState(self):
+        if self.roomba.leftBumpDetected | self.roomba.rightBumpDetected:
+            
+            self.timeSinceLastBump = time.clock_gettime(time.CLOCK_MONOTONIC_RAW) 
+            if self.current_state == self.passive_state:
+                self.current_state = self.pissed_state_1
+                
+            elif self.current_state == self.pissed_state_1:
+                self.current_state = self.pissed_state_2
+                
+            elif self.current_state == self.pissed_state_2:
+                self.current_state = self.passive_state
+        
+        print(self.current_state)
+        
+                
+    def runState(self):
+        if self.current_state == self.passive_state:
+            self.roomba.write_start()
+            
+        if self.current_state == self.pissed_state_1:
+            self.roomba.write_mode(mode=r.OPCODE_FULL)
+            
+            # back up
+            print('Backing Up')
+            self.roomba.write_drive_direct(int(-200),int(-200))
+            print('Command Sent') 
+            
+            
+            time.sleep(5)
+            
+            print('Stopping Now')
+            # stop
+            self.roomba.write_drive(velocity=0, radius=r.DRIVE_STRAIGHT)
+            
+            # play audio 1 until audio done
+            df.play(1,1)
+            
+            # spin in a circle
+            self.roomba.write_drive(velocity=200,radius=r.TURN_INPLACE_CW)
+            
+            time.sleep(5)
+            
+            while df.isPlaying():
+                pass
+            
+            # stop
+            self.roomba.write_drive(velocity=0,radius=r.TURN_INPLACE_CW)
+            
+            #roomba.write_clean()
+            self.roomba.write_start()
+            
+            self.current_state = self.passive_state
+            
+            self.roomba.leftBumpDetected = False
+            self.roomba.rightBumpDetected = False
+        
+        if self.current_state == self.pissed_state_2:
+            print('In state 2')
+            time.sleep(3)
+        
+        self.roomba.leftBumpDetected = False
+        self.roomba.rightBumpDetected = False
+        self.current_state = self.passive_state
+                
+    
+def startReadingBumps(roomba):
+    # send start command to roomba before any other commands
     roomba.write_start()
-    roomba.write_mode(mode=roomba.OPCODE_FULL)
-    print('Roomba in Full Mode')
+    
+    print('Start command sent to Roomba')
+    
     scheduler = sched.scheduler(time.time, time.sleep)
-    scheduler.enter(requestInterval,1,requestSensorData,argument=(scheduler,sDat,))
+    scheduler.enter(requestInterval,1,requestBumps,argument=(scheduler,roomba,))
     scheduler.run()
     
-def requestSensorData(scheduler,sDat):
+def requestBumps(scheduler,roomba):
+    # acquire lock
     threadLock.acquire(blocking=1)
-    global bytes_read
-    #bytes_read = [0]
+    
+    # read bumps and wheel drops from roomba
     bytes_read = roomba.read_bumps()
-    #print(bytes_read)
+    roomba.leftBumpDetected = bool(bytes_read[0] & (bytes([1 << r.IDX_LBUMP])[0]))
+    roomba.rightBumpDetected = bool(bytes_read[0] & (bytes([1 << r.IDX_RBUMP])[0]))
     
+    # hacky insertion... remove later
+    roomba.read_buttons()
+    
+    # release lock
     threadLock.release()
+    
     # start event scheduler over
-    scheduler.enter(requestInterval,1,requestSensorData,argument=(scheduler,sDat,))
-    
-
-def respondToBumps(sDat):
-    global bytes_read
-    threadLock.acquire(blocking=1)
-    print('Respond')
-    #print(bytes_read)
-    leftBumpDetected = bytes_read[0] & (bytes([1 << roomba.IDX_LBUMP])[0])
-    rightBumpDetected = bytes_read[0] & (bytes([1 << roomba.IDX_RBUMP])[0])
- 
-    if leftBumpDetected == 2:
-        print('Bump Detected')
-        bytes_read = bytes([0])
-        df.play(1,2)
-
-    threadLock.release()
-    time.sleep(0.02)
-
-def runMain(sDat):
+    scheduler.enter(requestInterval,1,requestBumps,argument=(scheduler,roomba,))
+        
+def runStateMachine(roomba):
+    stateMachine = StateMachine(roomba)
     
     while True:
-        respondToBumps(sDat)
-        
+        threadLock.acquire(blocking=1)
+        stateMachine.updateState()
+        stateMachine.runState()
+        threadLock.release()
+        time.sleep(0.05)
 
-sDat = SensorData()
-thread1 = myThread(1,"SensorReadingThread",runRequestSensorData,args = sDat)
-thread2 = myThread(2,"RespondThread",runMain,args=sDat)
+roomba = r.Roomba()
+thread1 = myThread(1,"SensorReadingThread",startReadingBumps, args = roomba)
+thread2 = myThread(2,"StateMachineThread",runStateMachine, args=roomba)
 thread1.start()
 thread2.start()
 
