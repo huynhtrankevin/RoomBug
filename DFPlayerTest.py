@@ -61,3 +61,5 @@ def resume():
     
 def isPlaying():
     return GPIO.input(BusyPin)
+
+play(1,1)
