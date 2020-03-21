@@ -141,24 +141,3 @@ thread1 = myThread(1,"SensorReadingThread",startReadingBumps, args = roomba)
 thread2 = myThread(2,"StateMachineThread",runStateMachine, args=roomba)
 thread1.start()
 thread2.start()
-
-
-
-    
-    
-    
-    
-
-
-
-
-
-
-
-#
-#while True:
-#    print('while loop')
-#    if sensorData.bytesBumpReadings[0] & bytes([1 << roomba.IDX_LBUMP])[0]:
-#        print('left bump detected')
-#    if sensorData.bytesBumpReadings[0] & bytes([1 << roomba.IDX_RBUMP])[0]:
-#        print('left bump detected')
