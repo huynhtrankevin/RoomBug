@@ -7,6 +7,13 @@ import DFPlayerTest as df
 # request every 20ms
 requestInterval = 0.03
 
+# util function
+def stateDelay(delay):
+        i = 0
+        waitTime = 1000000*delay
+        while (i < waitTime):
+            i = i + 1
+            
 
 threadLock = threading.Lock()
 # thread class    
@@ -32,25 +39,28 @@ class StateMachine:
         self.timeThresh = 3 # in time units returned by time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
         self.timeSinceLastBump = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
     
+    
+            
     def updateState(self):
         if self.roomba.leftBumpDetected | self.roomba.rightBumpDetected:
+            print('bump detected')
+            self.timeSinceLastBump = time.clock_gettime(time.CLOCK_MONOTONIC_RAW)
             
-            self.timeSinceLastBump = time.clock_gettime(time.CLOCK_MONOTONIC_RAW) 
             if self.current_state == self.passive_state:
                 self.current_state = self.pissed_state_1
                 
-            elif self.current_state == self.pissed_state_1:
-                self.current_state = self.pissed_state_2
-                
-            elif self.current_state == self.pissed_state_2:
-                self.current_state = self.passive_state
+#             elif self.current_state == self.pissed_state_1:
+#                 self.current_state = self.pissed_state_2
+#                 
+#             elif self.current_state == self.pissed_state_2:
+#                 self.current_state = self.passive_state
         
-        print(self.current_state)
+        #print(self.current_state)
         
                 
     def runState(self):
         if self.current_state == self.passive_state:
-            self.roomba.write_start()
+            print('passive')
             
         if self.current_state == self.pissed_state_1:
             self.roomba.write_mode(mode=r.OPCODE_FULL)
@@ -58,54 +68,47 @@ class StateMachine:
             # back up
             print('Backing Up')
             self.roomba.write_drive_direct(int(-200),int(-200))
-            print('Command Sent') 
             
-            
-            time.sleep(5)
+            stateDelay(7)    
+            #time.sleep(5)
             
             print('Stopping Now')
             # stop
             self.roomba.write_drive(velocity=0, radius=r.DRIVE_STRAIGHT)
-            
+            stateDelay(7)    
+            print('playing audio')
             # play audio 1 until audio done
             df.play(1,1)
             
             # spin in a circle
             self.roomba.write_drive(velocity=200,radius=r.TURN_INPLACE_CW)
             
-            time.sleep(5)
-            
-            while df.isPlaying():
-                pass
+            stateDelay(7)
             
             # stop
             self.roomba.write_drive(velocity=0,radius=r.TURN_INPLACE_CW)
             
             #roomba.write_clean()
-            self.roomba.write_start()
+           
             
             self.current_state = self.passive_state
             
             self.roomba.leftBumpDetected = False
             self.roomba.rightBumpDetected = False
         
-        if self.current_state == self.pissed_state_2:
-            print('In state 2')
-            time.sleep(3)
-        
         self.roomba.leftBumpDetected = False
         self.roomba.rightBumpDetected = False
         self.current_state = self.passive_state
                 
-    
+
+# bumps reading interval
+dt = 0.2
 def startReadingBumps(roomba):
     # send start command to roomba before any other commands
     roomba.write_start()
     
-    print('Start command sent to Roomba')
-    
     scheduler = sched.scheduler(time.time, time.sleep)
-    scheduler.enter(requestInterval,1,requestBumps,argument=(scheduler,roomba,))
+    scheduler.enter(requestInterval,dt,requestBumps,argument=(scheduler,roomba,))
     scheduler.run()
     
 def requestBumps(scheduler,roomba):
@@ -124,7 +127,7 @@ def requestBumps(scheduler,roomba):
     threadLock.release()
     
     # start event scheduler over
-    scheduler.enter(requestInterval,1,requestBumps,argument=(scheduler,roomba,))
+    scheduler.enter(requestInterval,dt,requestBumps,argument=(scheduler,roomba,))
         
 def runStateMachine(roomba):
     stateMachine = StateMachine(roomba)
